@@ -1,2 +1,2 @@
 # news-explorer-api
-project NewsSearcher
+backend project NewsSearcher
