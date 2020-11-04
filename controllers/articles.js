@@ -1,6 +1,7 @@
 const Article = require('../models/article');
 const BadRequestError = require('../errors/BadRequestError.js');
 const NotFoundError = require('../errors/NotFoundError.js');
+const ForbiddenError = require('../errors/NotFoundError.js');
 
 // Выгружаем новости пользователя
 const getAllArticles = (req, res, next) => Article.find({ owner: { _id: req.user._id } })
@@ -69,7 +70,7 @@ const deleteArticles = (req, res, next) => {
       }).populate(['owner'])
         .then((data) => {
           if (!data) {
-            return next(new NotFoundError('Невозможно удалить новость сохраненную другим пользователем'));
+            return next(new ForbiddenError('Невозможно удалить новость сохраненную другим пользователем'));
           }
           return Article.findByIdAndRemove(req.params, { new: true })
             .then(() => res.status(200).send({ message: 'Новость успешно удалена' }))

@@ -30,7 +30,7 @@ const validateNewArticles = celebrate({
     title: Joi.string().required(),
     text: Joi.string().required(),
     date: Joi.string().required(),
-    source: Joi.string().regex(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,})([\/\w\.-]*)*\/?\#?$/i).required(),
+    source: Joi.string().required(),
     link: Joi.string().regex(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,})([\/\w\.-]*)*\/?\#?$/i).required(),
     image: Joi.string().regex(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,})([\/\w\.-]*)*\/?\#?$/i).required(),
   }),
