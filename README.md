@@ -1,4 +1,5 @@
 # news-explorer-api
+level-1
 
 * Бэкенд express.js
 * БД mongoDB
