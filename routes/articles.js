@@ -1,4 +1,4 @@
-const router = require('express').Router();
+const articleRouter = require('express').Router();
 const {
   getAllArticles,
   getArticlesById, createArticles, deleteArticles,
@@ -6,11 +6,9 @@ const {
 const { auth } = require('../middlewares/auth');
 const { validateId, validateNewArticles } = require('../middlewares/requestValidator');
 
-router.get('/articles', auth, getAllArticles);
-router.post('/articles', auth, validateNewArticles, createArticles);
-router.delete('/articles/:_id', auth, validateId, deleteArticles);
-router.get('/articles/:_id', auth, validateId, getArticlesById);
+articleRouter.get('/', auth, getAllArticles);
+articleRouter.post('/', auth, validateNewArticles, createArticles);
+articleRouter.delete('/:_id', auth, validateId, deleteArticles);
+articleRouter.get('/:_id', auth, validateId, getArticlesById);
 
-module.exports = {
-  router,
-};
+module.exports = articleRouter;

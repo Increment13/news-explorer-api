@@ -1,7 +1,12 @@
 const Article = require('../models/article');
 const BadRequestError = require('../errors/BadRequestError.js');
 const NotFoundError = require('../errors/NotFoundError.js');
-const ForbiddenError = require('../errors/NotFoundError.js');
+const ForbiddenError = require('../errors/ForbiddenError.js');
+const {
+  notFound,
+  badRequest,
+  forbiddenError,
+} = require('../utils/constant');
 
 // Выгружаем новости пользователя
 const getAllArticles = (req, res, next) => Article.find({ owner: { _id: req.user._id } })
@@ -10,28 +15,32 @@ const getAllArticles = (req, res, next) => Article.find({ owner: { _id: req.user
   .catch((err) => next(err));
 
 // Поиск определенной новости
-const getArticlesById = (req, res, next) => Article.findById({
-  $and: [
-    { _id: req.param._id },
-    {
-      owner:
+const getArticlesById = (req, res, next) => {
+  const { _id } = req.params;
+
+  Article.findOne({
+    $and: [
+      { _id },
+      {
+        owner:
       { _id: req.user._id },
-    },
-  ],
-})
-  .populate(['owner'])
-  .then((articles) => {
-    if (!articles) {
-      return next(new NotFoundError('Запрашиваемые данные не найдены'));
-    }
-    return res.status(200).send(articles);
+      },
+    ],
   })
-  .catch((err) => {
-    if (err.name === 'CastError') {
-      return next(new BadRequestError('Переданы некорректные данные'));
-    }
-    return next(err);
-  });
+    .populate(['owner'])
+    .then((articles) => {
+      if (!articles) {
+        return next(new NotFoundError(notFound));
+      }
+      return res.status(200).send(articles);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new BadRequestError(badRequest));
+      }
+      return next(err);
+    });
+};
 
 // Создание новости
 const createArticles = (req, res, next) => {
@@ -45,7 +54,7 @@ const createArticles = (req, res, next) => {
     .then((articles) => res.status(201).send(articles))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Переданы некорректные данные'));
+        return next(new BadRequestError(badRequest));
       }
       return next(err);
     });
@@ -55,33 +64,19 @@ const createArticles = (req, res, next) => {
 const deleteArticles = (req, res, next) => {
   const { _id } = req.params;
 
-  Article.findOne({ _id })
+  Article.findOne({ _id }).populate(['owner'])
     .then((articles) => {
-      if (!articles) { return next(new NotFoundError('Запрашиваемые данные не найдены')); }
+      if (!articles) { return next(new NotFoundError(notFound)); }
 
-      return Article.findOne({
-        $and: [
-          { _id },
-          {
-            owner:
-              { _id: req.user._id },
-          },
-        ],
-      }).populate(['owner'])
-        .then((data) => {
-          if (!data) {
-            return next(new ForbiddenError('Невозможно удалить новость сохраненную другим пользователем'));
-          }
-          return Article.findByIdAndRemove(req.params, { new: true })
-            .then(() => res.status(200).send({ message: 'Новость успешно удалена' }))
-            .catch((err) => next(err));
-        })
-        .catch((err) => {
-          if (err.name === 'CastError') {
-            return next(new BadRequestError('Переданы некорректные данные'));
-          }
-          return next(err);
-        });
+      const owner = articles.owner._id.toString();
+
+      if (owner !== req.user._id) {
+        return next(new ForbiddenError(forbiddenError));
+      }
+
+      return Article.findByIdAndRemove(req.params, { new: true })
+        .then(() => res.status(200).send({ message: 'Новость успешно удалена' }))
+        .catch((err) => next(err));
     })
     .catch((err) => next(err));
 };

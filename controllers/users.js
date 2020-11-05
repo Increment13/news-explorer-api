@@ -5,8 +5,15 @@ const ConflictError = require('../errors/ConflictError.js');
 const BadRequestError = require('../errors/BadRequestError.js');
 const UnauthorizedError = require('../errors/UnauthorizedError.js');
 const NotFoundError = require('../errors/NotFoundError.js');
+const {
+  notFound,
+  badRequest,
+  unauthorizedError,
+  conflictError,
+} = require('../utils/constant');
 
-const { JWT_SECRET = 'dev-jwt-secret' } = process.env;
+const { jwtsecret } = require('../config/config');
+
 const SALT_ROUNDS = 10;
 
 // Авторизация пользователя
@@ -15,12 +22,12 @@ const authUser = (req, res, next) => {
 
   return User.findOne({ email }).select('+password')
     .then((user) => {
-      if (!user) return next(new UnauthorizedError('Некорректный email или пароль'));
+      if (!user) return next(new UnauthorizedError(unauthorizedError));
 
       return bcrypt.compare(password, user.password, (error, isValidPassword) => {
-        if (!isValidPassword) return next(new UnauthorizedError('Некорректный email или пароль'));
+        if (!isValidPassword) return next(new UnauthorizedError(unauthorizedError));
 
-        const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ _id: user._id }, jwtsecret, { expiresIn: '7d' });
         return res.status(200).send({ token });
       });
     })
@@ -35,7 +42,7 @@ const createUser = (req, res, next) => {
 
   return bcrypt.hash(password, SALT_ROUNDS, (error, hash) => User.findOne({ email })
     .then((user) => {
-      if (user) return next(new ConflictError('Пользователь с таким Email уже существует'));
+      if (user) return next(new ConflictError(conflictError));
 
       return User.create({
         email, password: hash, name,
@@ -43,7 +50,7 @@ const createUser = (req, res, next) => {
         .then(() => res.status(200).send({ message: `Пользователь ${email} успешно создан` }))
         .catch((err) => {
           if (err.name === 'CastError') {
-            return next(new BadRequestError('Переданы некорректные данные'));
+            return next(new BadRequestError(badRequest));
           }
           return next(err);
         });
@@ -60,13 +67,13 @@ const getUser = (req, res, next) => User.findById({ _id: req.user._id })
 const getUsersById = (req, res, next) => User.findById({ _id: req.params._id })
   .then((user) => {
     if (!user) {
-      return next(new NotFoundError('Запрашиваемые данные не найдены'));
+      return next(new NotFoundError(notFound));
     }
     return res.status(200).send(user);
   })
   .catch((err) => {
     if (err.name === 'CastError') {
-      return next(new BadRequestError('Переданы некорректные данные'));
+      return next(new BadRequestError(badRequest));
     }
     return next(err);
   });

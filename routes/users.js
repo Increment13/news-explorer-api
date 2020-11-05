@@ -1,4 +1,4 @@
-const router = require('express').Router();
+const userRouter = require('express').Router();
 const {
   getUsersById, createUser,
   authUser,
@@ -9,11 +9,9 @@ const {
 } = require('../middlewares/requestValidator');
 const { auth } = require('../middlewares/auth');
 
-router.post('/signup', validateCreateUser, createUser);
-router.post('/signin', validateLoginUser, authUser);
-router.get('/users/me', auth, getUser);
-router.get('/users/:_id', auth, validateId, getUsersById);
+userRouter.post('/signup', validateCreateUser, createUser);
+userRouter.post('/signin', validateLoginUser, authUser);
+userRouter.get('/users/me', auth, getUser);
+userRouter.get('/users/:_id', auth, validateId, getUsersById);
 
-module.exports = {
-  router,
-};
+module.exports = userRouter;
