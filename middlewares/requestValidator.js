@@ -1,5 +1,6 @@
 /* eslint-disable no-useless-escape */
 const { celebrate, Joi } = require('celebrate');
+const { UrlRegExp } = require('../config/config');
 
 const validateLoginUser = celebrate({
   body: Joi.object().keys({
@@ -31,8 +32,8 @@ const validateNewArticles = celebrate({
     text: Joi.string().required(),
     date: Joi.string().required(),
     source: Joi.string().required(),
-    link: Joi.string().regex(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,})([\/\w\.-]*)*\/?\#?$/i).required(),
-    image: Joi.string().regex(/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,})([\/\w\.-]*)*\/?\#?$/i).required(),
+    link: Joi.string().required().uri().pattern(UrlRegExp, 'URL'),
+    image: Joi.string().required().uri().pattern(UrlRegExp, 'URL'),
   }),
 });
 
